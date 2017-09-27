@@ -1,3 +1,4 @@
+from flask import url_for, request
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -15,6 +16,13 @@ class BaseModel(db.Model):
             for column, value in self._to_dict().items()
         })
 
+    def compose_image_url(self):
+        if type(self) == Castle:
+            clazz = "castle"
+        else:
+            clazz = "unit"
+        return request.url_root[:-1] + url_for('static', filename=clazz + "_" + str(self.id) + ".png")
+
 
 class Castle(BaseModel, db.Model):
     __tablename__ = 'castles'
@@ -28,6 +36,7 @@ class Castle(BaseModel, db.Model):
             'id': self.id,
             'name': self.name,
             'description': self.description,
+            'imageUrl': self.compose_image_url()
         }
 
 
@@ -60,5 +69,6 @@ class Unit(BaseModel, db.Model):
             'max_damage': self.max_damage,
             'health': self.health,
             'speed': self.speed,
-            'castle_id': self.castle_id
+            'castle_id': self.castle_id,
+            'imageUrl': self.compose_image_url()
         }
