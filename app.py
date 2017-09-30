@@ -5,9 +5,9 @@ app = Flask(__name__)
 
 app.config['DEBUG'] = True
 POSTGRES = {
-    'user': 'eugeneshapovalov',
+    'user': 'fizmig',
     'db': 'fizmig',
-    'host': 'localhost',
+    'host': 'postgres',
     'port': '5432',
 }
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%(user)s:@%(host)s:%(port)s/%(db)s' % POSTGRES
