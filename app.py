@@ -1,10 +1,10 @@
-from flask import Flask, jsonify, request
-from models import Castle, Unit, db
+from flask import Flask
+from models import db
 
 
 class ReverseProxied(object):
-    def __init__(self, app):
-        self.app = app
+    def __init__(self, wsgi_app):
+        self.app = wsgi_app
 
     def __call__(self, environ, start_response):
         scheme = environ.get('HTTP_X_SCHEME', '')
@@ -16,7 +16,6 @@ class ReverseProxied(object):
 app = Flask(__name__)
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 
-
 app.config['DEBUG'] = True
 POSTGRES = {
     'user': 'fizmig',
@@ -24,21 +23,12 @@ POSTGRES = {
     'host': 'postgres',
     'port': '5432',
 }
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%(user)s:@%(host)s:%(port)s/%(db)s' % POSTGRES
+app.config['SQLALCHEMY_DATABASE_URI'] \
+    = 'postgresql://%(user)s:@%(host)s:%(port)s/%(db)s' % POSTGRES
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
-
-@app.route("/castles", methods=['GET'])
-def castles():
-    return jsonify(castles=[castle.serialize() for castle in Castle.query.all()])
-
-
-@app.route("/units", methods=['GET'])
-def units():
-    castle_id = request.args.get('castle_id', type=int)
-    return jsonify(units=[unit.serialize() for unit in Unit.query.filter(Unit.castle_id == castle_id).all()])
-
+from api_controller import *
 
 if __name__ == '__main__':
     app.run()
