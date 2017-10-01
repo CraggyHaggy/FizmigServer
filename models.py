@@ -1,4 +1,4 @@
-from flask import url_for, request
+from flask import url_for, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -21,7 +21,8 @@ class BaseModel(db.Model):
             clazz = "castle"
         else:
             clazz = "unit"
-        return request.url_root[:-1] + url_for('static', filename=clazz + "_" + str(self.id) + ".png")
+        return request.url_root[:-1] + url_for(
+            'static', filename=clazz + "_" + str(self.id) + ".png")
 
 
 class Castle(BaseModel, db.Model):
@@ -40,12 +41,18 @@ class Castle(BaseModel, db.Model):
         }
 
 
+units_skills = db.Table('units_skills',
+                        db.Column('unit_id', db.Integer,
+                                  db.ForeignKey('units.id')),
+                        db.Column('skill_id', db.Integer,
+                                  db.ForeignKey('skills.id')))
+
+
 class Unit(BaseModel, db.Model):
     __tablename__ = 'units'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
-    description = db.Column(db.String, nullable=True)
     level = db.Column(db.Integer, nullable=False)
     is_upgraded = db.Column(db.Boolean, nullable=False)
     attack = db.Column(db.Integer, nullable=False)
@@ -55,13 +62,23 @@ class Unit(BaseModel, db.Model):
     health = db.Column(db.Integer, nullable=False)
     speed = db.Column(db.Integer, nullable=False)
     castle_id = db.Column(db.Integer, db.ForeignKey('castle_id'))
+    skills = db.relationship('Skill', backref=db.backref('units', lazy=True),
+                             lazy='dynamic', secondary=units_skills)
 
     def serialize(self):
+        json_skills = list()
+        for skill in self.skills.all():
+            json_skills.append(skill.serialize())
+
+        # This logic doesn't work!!! Use temporary decision.
+        # 'skills': jsonify(
+        #     skills=[skill.serialize() for skill in self.skills.all()]),
+
         return {
             'id': self.id,
             'name': self.name,
-            'description': self.description,
             'level': self.level,
+            'skills': json_skills,
             'is_upgraded': self.is_upgraded,
             'attack': self.attack,
             'defense': self.defense,
@@ -71,4 +88,17 @@ class Unit(BaseModel, db.Model):
             'speed': self.speed,
             'castle_id': self.castle_id,
             'imageUrl': self.compose_image_url()
+        }
+
+
+class Skill(BaseModel, db.Model):
+    __tablename__ = 'skills'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
         }
