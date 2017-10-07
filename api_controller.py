@@ -13,6 +13,6 @@ def get_castles():
 @app.route("/units", methods=['GET'])
 def get_units():
     castle_id = request.args.get('castle_id', type=int)
-    units = Unit.query.filter(Unit.castle_id == castle_id).join(
+    units = Unit.query.filter(Unit.castle_id == castle_id).outerjoin(
         Unit.skills).all()
     return jsonify(units=[unit.serialize() for unit in units])
