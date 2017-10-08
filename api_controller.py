@@ -10,15 +10,15 @@ def sign_up():
     username = request.form.get('username', type=str)
     password = request.form.get('password', type=str)
 
-    if username:
+    if not username:
         return make_error(400, 'Username is required')
-    if password:
+    if not password:
         return make_error(400, 'Password is required')
     if User.query.filter_by(username=username).first() is not None:
         return make_error(400, 'This username is already exists')
-    if len(username) > 16:
-        return make_error(400, 'Username length must be less than 16 '
-                               'characters')
+    if len(username) > User.max_username_length:
+        return make_error(400, 'Username length must be less than ' + str(
+            User.max_username_length) + ' characters')
 
     user = User(username,
                 generate_password_hash(password, method='pbkdf2:sha512'))

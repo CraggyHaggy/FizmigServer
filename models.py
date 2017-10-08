@@ -6,9 +6,11 @@ db = SQLAlchemy()
 
 class User(db.Model):
     __tablename__ = 'users'
+    max_username_length = 24
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String, nullable=False, index=True)
+    username = db.Column(db.String(max_username_length), nullable=False,
+                         index=True)
     password = db.Column(db.String, nullable=False)
     auth_token = db.Column(db.String, nullable=True)
     auth_token_expire_timestamp = db.Column(db.BigInteger, nullable=True)
