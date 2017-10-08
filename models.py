@@ -4,7 +4,21 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 
-class BaseModel(db.Model):
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String, nullable=False, index=True)
+    password = db.Column(db.String, nullable=False)
+    auth_token = db.Column(db.String, nullable=True)
+    auth_token_expire_timestamp = db.Column(db.BigInteger, nullable=True)
+
+    def __init__(self, username, password):
+        self.username = username
+        self.password = password
+
+
+class BaseGameModel(db.Model):
     __abstract__ = True
 
     def __init__(self, *args):
@@ -25,12 +39,12 @@ class BaseModel(db.Model):
             'static', filename=clazz + "_" + str(self.id) + ".png")
 
 
-class Castle(BaseModel, db.Model):
+class Castle(BaseGameModel, db.Model):
     __tablename__ = 'castles'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(), nullable=False)
-    description = db.Column(db.String(), nullable=False)
+    name = db.Column(db.String, nullable=False)
+    description = db.Column(db.String, nullable=False)
 
     def serialize(self):
         return {
@@ -48,7 +62,7 @@ units_skills = db.Table('units_skills',
                                   db.ForeignKey('skills.id')))
 
 
-class Unit(BaseModel, db.Model):
+class Unit(BaseGameModel, db.Model):
     __tablename__ = 'units'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -91,7 +105,7 @@ class Unit(BaseModel, db.Model):
         return d
 
 
-class Skill(BaseModel, db.Model):
+class Skill(BaseGameModel, db.Model):
     __tablename__ = 'skills'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -104,7 +118,7 @@ class Skill(BaseModel, db.Model):
         }
 
 
-class Cost(BaseModel, db.Model):
+class Cost(BaseGameModel, db.Model):
     __tablename__ = 'costs'
 
     id = db.Column(db.Integer, primary_key=True)

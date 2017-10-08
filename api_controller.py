@@ -1,7 +1,33 @@
 from flask import jsonify, request
+from werkzeug.security import generate_password_hash
 
 from app import app
-from models import Castle, Unit
+from models import Castle, Unit, User, db
+
+
+@app.route("/sign_up", methods=['POST'])
+def sign_up():
+    username = request.form.get('username', type=str)
+    password = request.form.get('password', type=str)
+
+    if username:
+        return make_error(400, 'Username is required')
+    if password:
+        return make_error(400, 'Password is required')
+    if User.query.filter_by(username=username).first() is not None:
+        return make_error(400, 'This username is already exists')
+    if len(username) > 16:
+        return make_error(400, 'Username length must be less than 16 '
+                               'characters')
+
+    user = User(username,
+                generate_password_hash(password, method='pbkdf2:sha512'))
+    db.session.add(user)
+    db.session.commit()
+
+    # TODO: authorization logic
+    # (Implement SignIn, SignOut, Tokens, Multiple errors).
+    return jsonify(201)
 
 
 @app.route("/castles", methods=['GET'])
@@ -16,3 +42,11 @@ def get_units():
     units = Unit.query.filter(Unit.castle_id == castle_id).outerjoin(
         Unit.skills).all()
     return jsonify(units=[unit.serialize() for unit in units])
+
+
+def make_error(code, message):
+    error = jsonify({
+        'details': message
+    })
+    error.status_code = code
+    return error
