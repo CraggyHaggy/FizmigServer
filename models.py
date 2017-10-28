@@ -19,6 +19,12 @@ class User(db.Model):
         self.username = username
         self.password = password
 
+    def serialize(self):
+        return {
+            'id': self.id,
+            'username': self.username
+        }
+
 
 class BaseGameModel(db.Model):
     __abstract__ = True
@@ -86,7 +92,7 @@ class Unit(BaseGameModel, db.Model):
     cost = db.relationship('Cost', backref='costs', uselist=False)
 
     def serialize(self):
-        d = {
+        return {
             'id': self.id,
             'name': self.name,
             'level': self.level,
@@ -104,7 +110,6 @@ class Unit(BaseGameModel, db.Model):
             'cost': self.cost.serialize(),
             'imageUrl': self.compose_image_url()
         }
-        return d
 
 
 class Skill(BaseGameModel, db.Model):
