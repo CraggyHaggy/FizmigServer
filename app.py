@@ -1,4 +1,5 @@
 from flask import Flask
+
 from models import db
 
 
@@ -23,11 +24,13 @@ POSTGRES = {
     'host': 'postgres',
     'port': '5432',
 }
+app.config['SECRET'] = 'UFRETIN_PIGUEDRAM'
 app.config['SQLALCHEMY_DATABASE_URI'] \
     = 'postgresql://%(user)s:@%(host)s:%(port)s/%(db)s' % POSTGRES
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
+# This is done, to dispatch requests to api_controller.
 from api_controller import *
 
 if __name__ == '__main__':

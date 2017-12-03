@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from app import app
 from models import Castle, Unit, User, db
+import jwt
 
 
 # TODO: authorization logic
@@ -50,9 +51,25 @@ def sign_in():
     if not check_password_hash(user.password, password):
         return make_error(400, 'The password is incorrect')
 
+    auth_token = generateAuthToken()
+    user.auth_token = auth_token
+    db.session.commit()
+
     response = jsonify(user.serialize())
-    response.headers['X-Token'] = 'KALYAN, GDE IMPLEMENTACIYA!!!!!!'
+    response.headers['X-Token'] = auth_token
     return response
+
+
+def generateAuthToken():
+    token = jwt.encode({'some': 'payload'}, app.config.get('SECRET'),
+                       algorithm='HS256')
+    return token
+
+
+def verifyToken(token):
+    # TODO implement token verification
+    # Verify it with value in db
+    return None
 
 
 @app.route("/castles", methods=['GET'])
