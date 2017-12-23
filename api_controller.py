@@ -1,13 +1,17 @@
+import datetime
+import random
+from functools import wraps
+
+import jwt
 from flask import jsonify, request
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app import app
 from models import Castle, Unit, User, db
-import jwt
 
 
 # TODO: authorization logic
-# (Implement SignOut, Tokens, Multiple errors).
+# (Implement SignOut, Tokens expiration, (Multiple errors)?).
 
 @app.route("/sign_up", methods=['POST'])
 def sign_up():
@@ -51,7 +55,7 @@ def sign_in():
     if not check_password_hash(user.password, password):
         return make_error(400, 'The password is incorrect')
 
-    auth_token = generateAuthToken()
+    auth_token = generate_auth_token()
     user.auth_token = auth_token
     db.session.commit()
 
@@ -60,25 +64,48 @@ def sign_in():
     return response
 
 
-def generateAuthToken():
-    token = jwt.encode({'some': 'payload'}, app.config.get('SECRET'),
-                       algorithm='HS256')
-    return token
+def generate_auth_token():
+    key = str(random.uniform(587329, 4832127819))
+    value = str(datetime.datetime.now())
+    auth_token_bytes = jwt.encode({key: value}, app.config.get('SECRET'),
+                                  algorithm='HS256')
+
+    return str(auth_token_bytes)
 
 
-def verifyToken(token):
-    # TODO implement token verification
-    # Verify it with value in db
-    return None
+def validate_session(fn):
+    @wraps(fn)
+    def inner():
+        authorized = validate_auth_token()
+        if not authorized:
+            return make_error(401, "User not authorized")
+        else:
+            return fn()
+
+    return inner
+
+
+def validate_auth_token():
+    try:
+        request_auth_token = request.headers['X-Token']
+        user = User.query.filter_by(auth_token=request_auth_token).first()
+        if user:
+            return True
+        else:
+            raise ValueError('Wrong token')
+    except (KeyError, ValueError):
+        return False
 
 
 @app.route("/castles", methods=['GET'])
+@validate_session
 def get_castles():
     castles = Castle.query.all()
     return jsonify(castles=[castle.serialize() for castle in castles])
 
 
 @app.route("/units", methods=['GET'])
+@validate_session
 def get_units():
     castle_id = request.args.get('castle_id', type=int)
     units = Unit.query.filter(Unit.castle_id == castle_id).outerjoin(

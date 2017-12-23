@@ -24,7 +24,7 @@ POSTGRES = {
     'host': 'postgres',
     'port': '5432',
 }
-app.config['SECRET'] = 'UFRETIN_PIGUEDRAM'
+app.config['SECRET'] = 'UFRETIN_PIGUEDRAM LORELEI STRAKER'
 app.config['SQLALCHEMY_DATABASE_URI'] \
     = 'postgresql://%(user)s:@%(host)s:%(port)s/%(db)s' % POSTGRES
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
